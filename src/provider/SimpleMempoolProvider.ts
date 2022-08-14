@@ -7,10 +7,15 @@ import { isEIP1559Transaction, isLegacyTransaction, LegacyMempoolTransaction, Me
  * It is based on an Ethereum node websocket provider.
  */
 class SimpleMempoolProvider extends MempoolProvider {
-  provider: providers.InfuraWebSocketProvider;
+  provider: providers.WebSocketProvider;
   constructor(capacity?: number) {
     super(capacity);
-    this.provider = new providers.InfuraWebSocketProvider("mainnet", "bc4844cc889e45be9722e5b565eaefdd");
+
+    if (!("WS_URL" in process.env)) {
+      console.log(chalk.bold.red("Set the `WS_URL` env variable to pass the connection URL!"));
+      process.exit(42);
+    }
+    this.provider = new providers.WebSocketProvider(process.env.WS_URL as string);
     this.provider.on("pending", (tx) => {
       this.provider.getTransaction(tx).then((transaction) => {
         if (transaction) {
